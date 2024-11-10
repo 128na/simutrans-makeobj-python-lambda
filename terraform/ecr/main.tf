@@ -2,6 +2,9 @@ resource "aws_ecr_repository" "main" {
   name         = "simutrans-makeobj-python-lambda_repo"
   force_delete = true
 }
+output "ecr_image_uri" {
+  value = "${aws_ecr_repository.main.repository_url}:latest"
+}
 
 resource "aws_ecr_lifecycle_policy" "main" {
   repository = aws_ecr_repository.main.name
