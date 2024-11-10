@@ -1,6 +1,6 @@
 FROM amazonlinux:2023
-
-RUN yum update && \ 
+# https://pypi.org/project/awslambdaric/
+RUN date && \
     # install makeobj
     yum install -y unzip libpng-devel && \
     curl -L -o makeobj.zip https://sourceforge.net/projects/simutrans/files/makeobj/60-7%20for%20124-0%20up/makeobj-linux-x64-60-7.zip && \
@@ -17,7 +17,10 @@ RUN yum update && \
     ln -s /usr/bin/python3.11 /usr/local/bin/python && \
     # install awslambdaric 
     pip install awslambdaric && \
+    # add python dependencies
+    pip install aws-lambda-typing requests_toolbelt && \
     # cleanup
+    pip cache purge && \
     yum clean all
 
 WORKDIR /var/task
