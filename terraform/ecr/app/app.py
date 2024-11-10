@@ -90,7 +90,7 @@ def handle_makeobj():
 
 def parse_result(raw: str):
     sections = re.split(r"(?=Contents of file)", raw)
-    result = {"message": sections.pop(0), "files": []}
+    result = {"message": sections.pop(0).strip(), "files": []}
 
     for section in sections:
         print("section", section)
@@ -98,7 +98,7 @@ def parse_result(raw: str):
         print("data", data)
         data["list"] = parse_lines(section.splitlines())
 
-        result.files.append(data)
+        result["files"].append(data)
     return result
 
 
@@ -107,7 +107,7 @@ def parse_section(section: str):
 
     result = {
         "file_name": match.group(1).replace(TMP_DIR, ""),
-        "pak_version": match.group(2),
+        "pak_version": int(match.group(2)),
         "list": [],
     }
 
