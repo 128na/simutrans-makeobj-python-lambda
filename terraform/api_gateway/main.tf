@@ -10,11 +10,6 @@ resource "aws_iam_role" "api_gateway_role" {
   assume_role_policy = data.aws_iam_policy_document.api_gateway_assume_role.json
 }
 
-resource "aws_iam_role_policy_attachment" "api_gateway_policy_logs" {
-  role       = aws_iam_role.api_gateway_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
-}
-
 resource "aws_iam_role_policy_attachment" "api_gateway_policy_lambda" {
   role       = aws_iam_role.api_gateway_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaRole"
@@ -33,6 +28,8 @@ data "aws_iam_policy_document" "api_gateway_assume_role" {
 
 resource "aws_api_gateway_rest_api" "api" {
   name = "simutrans-makeobj-api"
+
+  binary_media_types = ["multipart/form-data", "application/octet-stream"]
 }
 
 resource "aws_api_gateway_resource" "resource" {
@@ -46,6 +43,10 @@ resource "aws_api_gateway_method" "method" {
   resource_id   = aws_api_gateway_resource.resource.id
   http_method   = "POST"
   authorization = "NONE"
+
+  request_parameters = {
+    "method.request.header.Content-Type" = true
+  }
 }
 
 resource "aws_api_gateway_integration" "integration" {
