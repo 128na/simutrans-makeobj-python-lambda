@@ -30,11 +30,12 @@ resource "random_string" "bearer_token" {
 
 # ログ
 resource "aws_cloudwatch_log_group" "auth_lambda_log_group" {
-  name              = "/aws/lambda/${aws_lambda_function.auth_py.function_name}"
+  name = "/aws/lambda/${aws_lambda_function.auth_py.function_name}"
+
   retention_in_days = 14
 }
 
 # API gatewayで参照するためのARN
 output "auth_function_arn" {
-  value = aws_lambda_function.main.invoke_arn
+  value = aws_lambda_function.auth_py.invoke_arn
 }
