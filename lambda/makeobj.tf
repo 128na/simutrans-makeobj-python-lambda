@@ -37,16 +37,13 @@ resource "aws_lambda_function" "main" {
   memory_size   = 1024 # 1GB pakファイル操作するので多めに確保
   timeout       = 300  # 5min ゆっくりしていってね！
   description   = "渡されたファイルに対してmakeobj listを実行する"
+  architectures = ["x86_64"]
 
-  depends_on = [
-    aws_iam_role_policy_attachment.lambda_cloudwatch_policy,
-    aws_cloudwatch_log_group.lambda_log_group,
-  ]
 }
 
 # ログ
 resource "aws_cloudwatch_log_group" "lambda_log_group" {
-  name              = "/aws/lambda/simutrans-makeobj-func"
+  name              = "/aws/lambda/${aws_lambda_function.main.function_name}"
   retention_in_days = 14
 }
 
