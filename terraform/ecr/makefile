@@ -1,4 +1,4 @@
-include ../.env
+include .env
 
 # ビルドしてプッシュ
 publish: build push 

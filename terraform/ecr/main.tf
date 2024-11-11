@@ -31,7 +31,7 @@ EOF
 
 resource "null_resource" "build_image" {
   triggers = {
-    file_content_sha1 = sha1(join("", [for f in ["../.env", "makefile", "dockerfile"] : filesha1(f)], [for f in fileset("app", "*") : filesha1("app/${f}")]))
+    file_content_sha1 = sha1(join("", [for f in [".env", "makefile", "dockerfile"] : filesha1(f)], [for f in fileset("app", "*") : filesha1("app/${f}")]))
   }
 
   provisioner "local-exec" {
