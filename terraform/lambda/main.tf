@@ -24,23 +24,29 @@ resource "aws_iam_role_policy_attachment" "lambda_cloudwatch_policy" {
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name               = "simutrans-makeobj-python-lambda_role"
+  name               = "simutrans-makeobj-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 
 resource "aws_lambda_function" "main" {
-  function_name = "simutrans-makeobj-python-lambda_func"
+  function_name = "simutrans-makeobj-func"
   role          = aws_iam_role.iam_for_lambda.arn
   image_uri     = data.terraform_remote_state.ecr.outputs.ecr_image_uri
   package_type  = "Image"
-  memory_size   = 1024 # 1GB
-  timeout       = 300  # 5min
+  memory_size   = 1024 # 1GB pakファイル操作するので多めに確保
+  timeout       = 300  # 5min ゆっくりしていってね！
   description   = "渡されたファイルに対してmakeobj listを実行する"
 
 }
 
+# ログ
 resource "aws_cloudwatch_log_group" "lambda_log_group" {
-  name              = "/aws/lambda/simutrans-makeobj-python-lambda_func"
+  name              = "/aws/lambda/simutrans-makeobj-func"
   retention_in_days = 14
+}
+
+# API gatewayで参照するためのARN
+output "function_arn" {
+  value = aws_lambda_function.main.arn
 }

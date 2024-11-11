@@ -1,9 +1,6 @@
 resource "aws_ecr_repository" "main" {
-  name         = "simutrans-makeobj-python-lambda_repo"
+  name         = "simutrans-makeobj-repo"
   force_delete = true
-}
-output "ecr_image_uri" {
-  value = "${aws_ecr_repository.main.repository_url}:latest"
 }
 
 resource "aws_ecr_lifecycle_policy" "main" {
@@ -37,4 +34,8 @@ resource "null_resource" "build_image" {
   provisioner "local-exec" {
     command = "make publish"
   }
+}
+
+output "ecr_image_uri" {
+  value = "${aws_ecr_repository.main.repository_url}:latest"
 }
