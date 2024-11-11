@@ -17,21 +17,18 @@ def handler(event: events.APIGatewayProxyEventV2, context: context_.Context):
         return {
             "statusCode": 200,
             "headers": {"Content-Type": "application/json"},
-            "isBase64Encoded": False,
             "body": json.dumps(result),
         }
     except FileException:
         return {
             "statusCode": 400,
             "headers": {"Content-Type": "application/json"},
-            "isBase64Encoded": False,
             "body": json.dumps({"error": "ファイル保存に失敗しました"}),
         }
     except MakeobException:
         return {
             "statusCode": 400,
             "headers": {"Content-Type": "application/json"},
-            "isBase64Encoded": False,
             "body": json.dumps({"error": "makeobj実行に失敗しました"}),
         }
 

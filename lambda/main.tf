@@ -38,6 +38,10 @@ resource "aws_lambda_function" "main" {
   timeout       = 300  # 5min ゆっくりしていってね！
   description   = "渡されたファイルに対してmakeobj listを実行する"
 
+  depends_on = [
+    aws_iam_role_policy_attachment.lambda_cloudwatch_policy,
+    aws_cloudwatch_log_group.lambda_log_group,
+  ]
 }
 
 # ログ
@@ -48,5 +52,5 @@ resource "aws_cloudwatch_log_group" "lambda_log_group" {
 
 # API gatewayで参照するためのARN
 output "function_arn" {
-  value = aws_lambda_function.main.arn
+  value = aws_lambda_function.main.invoke_arn
 }
