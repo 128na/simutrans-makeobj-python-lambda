@@ -24,22 +24,14 @@ Terraform v1.9.8
 on linux_amd64
 ```
 
-setup
-
 ```bash
 cd terraform
 terraform plan
 terraform apply
-...
-Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
-
-Outputs:
-
-api_bearer_token = "***"
-api_endpoint = "https://***.execute-api.ap-northeast-1.amazonaws.com/makeobj-list"
 ```
 
-outputsにAPIのエンドポイント(api_endpoint)と認証トークン(api_bearer_token)が出力されます
+## API実行
+APIのエンドポイント(api_endpoint)と認証トークン(api_bearer_token)は `terraform apply` または環境構築後に `terraform show` 実行、AWS管理画面から確認できます。
 
 ```bash
 curl -X POST -H "Authorization: Bearer <api_bearer_token>" -F "file=@./sample.pak" https://<api_endpoint>|jq
@@ -61,3 +53,7 @@ curl -X POST -H "Authorization: Bearer <api_bearer_token>" -F "file=@./sample.pa
   ]
 }
 ```
+
+## 構成図
+
+![構成図](./flow.png)
