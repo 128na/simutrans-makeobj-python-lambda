@@ -1,6 +1,6 @@
 # Simutrans Makeobj on Python Lambda
 
-POSTしたpakファイルに対して `makeobj LIST` を実行した結果を返すAPI。
+POSTしたpakファイルに対して `makeobj LIST` を実行した結果を返すAPIです。
 
 makeobjを実行するlambda環境はECRでamazonlinux2023ベースの専用イメージを作成しています。
 makeobjのハンドリングはpython3.11を使用しています。
@@ -30,6 +30,13 @@ setup
 cd terraform
 terraform plan
 terraform apply
+...
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+api_bearer_token = "***"
+api_endpoint = "https://***.execute-api.ap-northeast-1.amazonaws.com/makeobj-list"
 ```
 
 outputsにAPIのエンドポイント(api_endpoint)と認証トークン(api_bearer_token)が出力されます
