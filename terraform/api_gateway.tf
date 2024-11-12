@@ -1,6 +1,6 @@
 # Assume Role Policy（API Gatewayによるロールの引き受け）
 resource "aws_iam_role" "api_gateway_role" {
-  name               = "simutrans-makeobj-api-gateway-role"
+  name               = "${var.app_name}-api-gateway-role"
   assume_role_policy = data.aws_iam_policy_document.api_gateway_assume_role.json
 }
 
@@ -46,7 +46,7 @@ resource "aws_iam_role_policy" "http_api_invoke_policy" {
 
 # HTTP APIリソースのARN取得
 resource "aws_apigatewayv2_api" "http_api" {
-  name          = "simutrans-makeobj-http-api"
+  name          = "${var.app_name}-http-api"
   protocol_type = "HTTP"
 
   depends_on = [
@@ -65,12 +65,18 @@ resource "aws_apigatewayv2_integration" "lambda_integration" {
 
 resource "aws_apigatewayv2_route" "route" {
   api_id    = aws_apigatewayv2_api.http_api.id
-  route_key = "POST /"
+  route_key = "POST ${var.api_path}"
   target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
 
   authorization_type = "CUSTOM"
   authorizer_id      = aws_apigatewayv2_authorizer.auth.id
 }
+
+output "api_endpoint" {
+  value       = "${aws_apigatewayv2_api.http_api.api_endpoint}${var.api_path}"
+  description = "API エンドポイント"
+}
+
 
 resource "aws_apigatewayv2_stage" "stage" {
   api_id      = aws_apigatewayv2_api.http_api.id
@@ -79,14 +85,14 @@ resource "aws_apigatewayv2_stage" "stage" {
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_gateway_log_group.arn
-    format          = "$context.requestId $context.identity.sourceIp $context.identity.userAgent $context.requestTime $context.integrationErrorMessage $context.authorizer.error"
+    format          = var.log_format
   }
 }
 
 resource "aws_cloudwatch_log_group" "api_gateway_log_group" {
-  name = "/aws/api-gateway/simutrans-makeobj"
+  name = "/aws/api-gateway/${var.app_name}"
 
-  retention_in_days = 7
+  retention_in_days = var.log_retention_in_days
 }
 
 resource "aws_apigatewayv2_authorizer" "auth" {
@@ -94,7 +100,7 @@ resource "aws_apigatewayv2_authorizer" "auth" {
   authorizer_type         = "REQUEST"
   authorizer_uri          = aws_lambda_function.lambda_auth.invoke_arn
   identity_sources        = ["$request.header.Authorization"]
-  name                    = "simutrans-makeobj-authorizer"
+  name                    = "${var.app_name}-authorizer"
   enable_simple_responses = false
 
   authorizer_payload_format_version = "2.0"
@@ -105,7 +111,7 @@ resource "aws_apigatewayv2_authorizer" "auth" {
 resource "aws_lambda_permission" "func" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = "simutrans-makeobj-func"
+  function_name = "${var.app_name}-func"
   principal     = "apigateway.amazonaws.com"
 
   # The /*/*/* part allows invocation from any stage, method and resource path
@@ -116,7 +122,7 @@ resource "aws_lambda_permission" "func" {
 resource "aws_lambda_permission" "auth" {
   statement_id  = "AllowExecutionAuthorizerFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = "simutrans-makeobj-auth"
+  function_name = "${var.app_name}-auth"
   principal     = "apigateway.amazonaws.com"
 
   source_arn = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"

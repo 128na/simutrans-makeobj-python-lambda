@@ -1,5 +1,3 @@
-include .env
-
 # ビルドしてプッシュ
 publish: build push 
 

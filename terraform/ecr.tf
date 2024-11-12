@@ -1,5 +1,10 @@
+provider "aws" {
+  region = "ap-northeast-1"
+}
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 resource "aws_ecr_repository" "main" {
-  name         = "simutrans-makeobj-repo"
+  name         = "${var.app_name}-repo"
   force_delete = true
 }
 
@@ -29,11 +34,16 @@ EOF
 
 resource "null_resource" "build_ecr_image" {
   triggers = {
-    file_content_sha1 = sha1(join("", [for f in [".env", "makefile", "dockerfile"] : filesha1(f)], [for f in fileset("lambda-makeobj", "*") : filesha1("lambda-makeobj/${f}")]))
+    file_content_sha1 = sha1(join("", [for f in ["makefile", "dockerfile"] : filesha1(f)], [for f in fileset("lambda-makeobj", "*") : filesha1("lambda-makeobj/${f}")]))
   }
 
   provisioner "local-exec" {
     command = "make publish"
+    environment = {
+      APP_NAME       = var.app_name
+      AWS_REGION     = data.aws_region.current.name
+      AWS_ACCOUNT_ID = data.aws_caller_identity.current.account_id
+    }
   }
 
   depends_on = [aws_ecr_repository.main]

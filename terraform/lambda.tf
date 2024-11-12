@@ -23,12 +23,12 @@ resource "aws_iam_role_policy_attachment" "lambda_cloudwatch_policy" {
 }
 
 resource "aws_iam_role" "lambda_role" {
-  name               = "simutrans-makeobj-role"
+  name               = "${var.app_name}-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_lambda_function" "lambda_makeobj" {
-  function_name = "simutrans-makeobj-func"
+  function_name = "${var.app_name}-func"
   role          = aws_iam_role.lambda_role.arn
   image_uri     = "${aws_ecr_repository.main.repository_url}:latest"
   package_type  = "Image"
@@ -42,11 +42,11 @@ resource "aws_lambda_function" "lambda_makeobj" {
 
 resource "aws_cloudwatch_log_group" "lambda_log_group" {
   name              = "/aws/lambda/${aws_lambda_function.lambda_makeobj.function_name}"
-  retention_in_days = 7
+  retention_in_days = var.log_retention_in_days
 }
 
 resource "aws_lambda_function" "lambda_auth" {
-  function_name    = "simutrans-makeobj-auth"
+  function_name    = "${var.app_name}-auth"
   filename         = data.archive_file.lambda_auth.output_path
   source_code_hash = data.archive_file.lambda_auth.output_base64sha256
   runtime          = "python3.12"
@@ -61,6 +61,10 @@ resource "aws_lambda_function" "lambda_auth" {
     }
   }
 }
+output "api_bearer_token" {
+  value       = random_string.bearer_token.result
+  description = "API Bearerトークン"
+}
 
 # 認証トークン（固定値）
 resource "random_string" "bearer_token" {
@@ -71,5 +75,5 @@ resource "random_string" "bearer_token" {
 resource "aws_cloudwatch_log_group" "auth_lambda_log_group" {
   name = "/aws/lambda/${aws_lambda_function.lambda_auth.function_name}"
 
-  retention_in_days = 7
+  retention_in_days = var.log_retention_in_days
 }
