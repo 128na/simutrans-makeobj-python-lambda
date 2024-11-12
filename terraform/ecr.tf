@@ -24,18 +24,17 @@ resource "aws_ecr_lifecycle_policy" "main" {
   ]
 }
 EOF
+
 }
 
-resource "null_resource" "build_image" {
+resource "null_resource" "build_ecr_image" {
   triggers = {
-    file_content_sha1 = sha1(join("", [for f in [".env", "makefile", "dockerfile"] : filesha1(f)], [for f in fileset("app", "*") : filesha1("app/${f}")]))
+    file_content_sha1 = sha1(join("", [for f in [".env", "makefile", "dockerfile"] : filesha1(f)], [for f in fileset("lambda-makeobj", "*") : filesha1("lambda-makeobj/${f}")]))
   }
 
   provisioner "local-exec" {
     command = "make publish"
   }
-}
 
-output "ecr_image_uri" {
-  value = "${aws_ecr_repository.main.repository_url}:latest"
+  depends_on = [aws_ecr_repository.main]
 }

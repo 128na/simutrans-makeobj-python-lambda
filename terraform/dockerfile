@@ -25,7 +25,7 @@ RUN date && \
 
 WORKDIR /var/task
 
-COPY app/*  /var/task
+COPY lambda-makeobj/*  /var/task
 
 ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
 CMD [ "app.handler" ]
