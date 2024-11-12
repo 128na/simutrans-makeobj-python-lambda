@@ -1,6 +1,6 @@
 .env
-.zip
-.pak
+*.zip
+*.pak
 
 # https://github.com/github/gitignore/blob/main/Terraform.gitignore
 # -------------------------------- terraform
