@@ -1,9 +1,3 @@
-# Assume Role Policy（API Gatewayによるロールの引き受け）
-resource "aws_iam_role" "api_gateway_role" {
-  name               = "${var.app_name}-api-gateway-role"
-  assume_role_policy = data.aws_iam_policy_document.api_gateway_assume_role.json
-}
-
 data "aws_iam_policy_document" "api_gateway_assume_role" {
   statement {
     actions = [
@@ -17,17 +11,6 @@ data "aws_iam_policy_document" "api_gateway_assume_role" {
   }
 }
 
-# Lambda実行権限のアタッチ
-resource "aws_iam_role_policy_attachment" "api_gateway_policy_lambda" {
-  role       = aws_iam_role.api_gateway_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaRole"
-}
-# CloudWatchLogs書き込み権限のアタッチ
-resource "aws_iam_role_policy_attachment" "api_gateway_logs_attachment" {
-  role       = aws_iam_role.api_gateway_role.name
-  policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-}
-
 # API Gatewayリソースへのアクセス権限
 data "aws_iam_policy_document" "http_api_gateway_policy" {
   statement {
@@ -39,12 +22,28 @@ data "aws_iam_policy_document" "http_api_gateway_policy" {
   }
 }
 
+# Assume Role Policy（API Gatewayによるロールの引き受け）
+resource "aws_iam_role" "api_gateway_role" {
+  name               = "${var.app_name}-api-gateway-role"
+  assume_role_policy = data.aws_iam_policy_document.api_gateway_assume_role.json
+}
+# Lambda実行権限のアタッチ
+resource "aws_iam_role_policy_attachment" "api_gateway_policy_lambda" {
+  role       = aws_iam_role.api_gateway_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaRole"
+}
+# CloudWatchLogs書き込み権限のアタッチ
+resource "aws_iam_role_policy_attachment" "api_gateway_logs_attachment" {
+  role       = aws_iam_role.api_gateway_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+}
+
 resource "aws_iam_role_policy" "http_api_invoke_policy" {
   role   = aws_iam_role.api_gateway_role.id
   policy = data.aws_iam_policy_document.http_api_gateway_policy.json
 }
 
-# HTTP APIリソースのARN取得
+# API
 resource "aws_apigatewayv2_api" "http_api" {
   name          = "${var.app_name}-http-api"
   protocol_type = "HTTP"
@@ -55,6 +54,7 @@ resource "aws_apigatewayv2_api" "http_api" {
   ]
 }
 
+# lambda統合設定
 resource "aws_apigatewayv2_integration" "lambda_integration" {
   api_id                 = aws_apigatewayv2_api.http_api.id
   integration_type       = "AWS_PROXY"
@@ -63,6 +63,7 @@ resource "aws_apigatewayv2_integration" "lambda_integration" {
   payload_format_version = "2.0"
 }
 
+# APIのルート
 resource "aws_apigatewayv2_route" "route" {
   api_id    = aws_apigatewayv2_api.http_api.id
   route_key = "POST ${var.api_path}"
@@ -72,12 +73,7 @@ resource "aws_apigatewayv2_route" "route" {
   authorizer_id      = aws_apigatewayv2_authorizer.auth.id
 }
 
-output "api_endpoint" {
-  value       = "${aws_apigatewayv2_api.http_api.api_endpoint}${var.api_path}"
-  description = "API エンドポイント"
-}
-
-
+# APIのステージ（デフォルト）
 resource "aws_apigatewayv2_stage" "stage" {
   api_id      = aws_apigatewayv2_api.http_api.id
   name        = "$default"
@@ -89,12 +85,14 @@ resource "aws_apigatewayv2_stage" "stage" {
   }
 }
 
+# APIのログ
 resource "aws_cloudwatch_log_group" "api_gateway_log_group" {
   name = "/aws/api-gateway/${var.app_name}"
 
   retention_in_days = var.log_retention_in_days
 }
 
+# 認証用のlambda設定
 resource "aws_apigatewayv2_authorizer" "auth" {
   api_id                  = aws_apigatewayv2_api.http_api.id
   authorizer_type         = "REQUEST"
@@ -107,16 +105,13 @@ resource "aws_apigatewayv2_authorizer" "auth" {
   authorizer_result_ttl_in_seconds  = 0
 }
 
-# API gatewayからlambdaを呼び出せるようにする
+# API gatewayからlambdaを呼び出す権限追加
 resource "aws_lambda_permission" "func" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
   function_name = "${var.app_name}-func"
   principal     = "apigateway.amazonaws.com"
 
-  # The /*/*/* part allows invocation from any stage, method and resource path
-  # within API Gateway REST API. the last one indicates where to send requests to.
-  # see more detail https://docs.aws.amazon.com/lambda/latest/dg/services-apigateway.html
   source_arn = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
 }
 resource "aws_lambda_permission" "auth" {
@@ -126,4 +121,9 @@ resource "aws_lambda_permission" "auth" {
   principal     = "apigateway.amazonaws.com"
 
   source_arn = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
+}
+
+output "api_endpoint" {
+  value       = "${aws_apigatewayv2_api.http_api.api_endpoint}${var.api_path}"
+  description = "API エンドポイント"
 }

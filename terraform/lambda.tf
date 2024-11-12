@@ -11,12 +11,14 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 
+# 認証用lambda本体
 data "archive_file" "lambda_auth" {
   type        = "zip"
   source_dir  = "lambda-auth"
   output_path = "lambda-auth.zip"
 }
 
+# 権限
 resource "aws_iam_role_policy_attachment" "lambda_cloudwatch_policy" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
@@ -27,6 +29,7 @@ resource "aws_iam_role" "lambda_role" {
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
+# makeobj実行するlambda
 resource "aws_lambda_function" "lambda_makeobj" {
   function_name = "${var.app_name}-func"
   role          = aws_iam_role.lambda_role.arn
@@ -45,6 +48,7 @@ resource "aws_cloudwatch_log_group" "lambda_log_group" {
   retention_in_days = var.log_retention_in_days
 }
 
+# 認証用lambda
 resource "aws_lambda_function" "lambda_auth" {
   function_name    = "${var.app_name}-auth"
   filename         = data.archive_file.lambda_auth.output_path
@@ -53,17 +57,13 @@ resource "aws_lambda_function" "lambda_auth" {
   role             = aws_iam_role.lambda_role.arn
   handler          = "app.handler"
   description      = "API Bearerトークン認証"
-  architectures    = ["arm64"]
+  architectures    = ["arm64"] # armのほうが安い
 
   environment {
     variables = {
       BEARER_TOKEN = random_string.bearer_token.result
     }
   }
-}
-output "api_bearer_token" {
-  value       = random_string.bearer_token.result
-  description = "API Bearerトークン"
 }
 
 # 認証トークン（固定値）
@@ -76,4 +76,9 @@ resource "aws_cloudwatch_log_group" "auth_lambda_log_group" {
   name = "/aws/lambda/${aws_lambda_function.lambda_auth.function_name}"
 
   retention_in_days = var.log_retention_in_days
+}
+
+output "api_bearer_token" {
+  value       = random_string.bearer_token.result
+  description = "API Bearerトークン"
 }
