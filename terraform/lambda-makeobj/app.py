@@ -7,6 +7,7 @@ from requests_toolbelt.multipart import decoder
 from aws_lambda_typing import context as context_, events
 
 TMP_DIR = "/tmp/"
+MAKEOBJ_PATH = "/usr/games/makeobj"
 
 
 def handler(event: events.APIGatewayProxyEventV2, context: context_.Context):
@@ -38,7 +39,7 @@ def handle_event(event: events.APIGatewayProxyEventV2):
         multipart_data = get_body(event)
         save_files(multipart_data)
     except Exception as e:
-        print(e)
+        print("erroe", e)
         raise FileException
 
 
@@ -73,7 +74,7 @@ def save_files(multipart_data: MultipartDecoder):
 def handle_makeobj():
     try:
         raw = subprocess.run(
-            ["makeobj", "LIST", f"{TMP_DIR}*.pak"], capture_output=True, text=True
+            [MAKEOBJ_PATH, "LIST", f"{TMP_DIR}*.pak"], capture_output=True, text=True
         )
         print("raw", raw)
         res = parse_result(raw.stdout)
@@ -81,7 +82,7 @@ def handle_makeobj():
         return res
 
     except Exception as e:
-        print(e)
+        print("error", e)
         raise MakeobException
 
 

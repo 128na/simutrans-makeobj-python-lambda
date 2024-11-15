@@ -1,31 +1,24 @@
-FROM amazonlinux:2023
-# https://pypi.org/project/awslambdaric/
-RUN date && \
-    # install makeobj
-    yum install -y unzip libpng-devel && \
-    curl -L -o makeobj.zip https://sourceforge.net/projects/simutrans/files/makeobj/60-7%20for%20124-0%20up/makeobj-linux-x64-60-7.zip && \
-    unzip makeobj.zip && \
-    rm makeobj.zip && \
-    mv ./makeobj /usr/local/bin/makeobj && \
-    chmod 755 /usr/local/bin/makeobj && \
-    ln -s /usr/local/bin/makeobj /usr/bin/makeobj && \
-    # install python
-    yum install -y python3.11 && \
-    curl -O https://bootstrap.pypa.io/get-pip.py && \
-    python3.11 get-pip.py && \
-    rm get-pip.py && \
-    ln -s /usr/bin/python3.11 /usr/local/bin/python && \
-    # install awslambdaric 
-    pip install awslambdaric && \
-    # add python dependencies
-    pip install aws-lambda-typing requests_toolbelt && \
-    # cleanup
-    pip cache purge && \
-    yum clean all
+FROM public.ecr.aws/docker/library/python:3.12-slim-bullseye
+
+# Install necessary system packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    simutrans-makeobj \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create function directory
+RUN mkdir -p /var/task
+
+# Install Python dependencies
+RUN pip install --no-cache-dir \
+    awslambdaric \
+    aws-lambda-typing \
+    requests_toolbelt
+
+# Copy application files
+COPY lambda-makeobj/* /var/task
 
 WORKDIR /var/task
-
-COPY lambda-makeobj/*  /var/task
 
 ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
 CMD [ "app.handler" ]
