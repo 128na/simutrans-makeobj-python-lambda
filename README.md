@@ -2,7 +2,7 @@
 
 POSTしたpakファイルに対して `makeobj LIST` を実行した結果を返すAPIです。
 
-makeobjを実行するlambda環境はECRでamazonlinux2023ベースの専用イメージを作成しています。
+makeobjを実行するlambda環境はECRに専用イメージを作成して利用しています。
 makeobjのハンドリングはpython3.11を使用しています。
 
 ## setup
