@@ -12,7 +12,6 @@ RUN mkdir -p /var/task
 # Install Python dependencies
 RUN pip install --no-cache-dir \
     awslambdaric \
-    aws-lambda-typing \
     requests_toolbelt
 
 # Copy application files

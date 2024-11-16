@@ -10,8 +10,10 @@ variable "log_retention_in_days" {
 }
 
 variable "log_format" {
-  type        = string
-  default     = "$context.requestId $context.identity.sourceIp $context.identity.userAgent $context.requestTime $context.integrationErrorMessage $context.authorizer.error"
+  type    = string
+  default = "$context.requestId $context.identity.sourceIp $context.identity.userAgent $context.requestTime"
+  # エラー調査用
+  # default     = "$context.requestId $context.identity.sourceIp $context.identity.userAgent $context.requestTime $context.integrationErrorMessage $context.authorizer.error"
   description = "APIアクセスログのフォーマット"
 }
 

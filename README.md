@@ -3,7 +3,7 @@
 POSTしたpakファイルに対して `makeobj LIST` を実行した結果を返すAPIです。
 
 makeobjを実行するlambda環境はECRに専用イメージを作成して利用しています。
-makeobjのハンドリングはpython3.11を使用しています。
+makeobjのハンドリングはpythonを使用しています。
 
 ## setup
 事前にmake, docker, aws-cli, terraformが使用可能な状態にしてください。

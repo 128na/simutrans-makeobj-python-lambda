@@ -4,13 +4,12 @@ import re
 import base64
 from requests_toolbelt import MultipartDecoder
 from requests_toolbelt.multipart import decoder
-from aws_lambda_typing import context as context_, events
 
 TMP_DIR = "/tmp/"
 MAKEOBJ_PATH = "/usr/games/makeobj"
 
 
-def handler(event: events.APIGatewayProxyEventV2, context: context_.Context):
+def handler(event, context):
     try:
         handle_event(event)
         result = handle_makeobj()
@@ -34,7 +33,7 @@ def handler(event: events.APIGatewayProxyEventV2, context: context_.Context):
         }
 
 
-def handle_event(event: events.APIGatewayProxyEventV2):
+def handle_event(event):
     try:
         multipart_data = get_body(event)
         save_files(multipart_data)
@@ -43,7 +42,7 @@ def handle_event(event: events.APIGatewayProxyEventV2):
         raise FileException
 
 
-def get_body(event: events.APIGatewayProxyEventV2):
+def get_body(event):
     content_type = event["headers"].get("Content-Type") or event["headers"].get(
         "content-type"
     )
